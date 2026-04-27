@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downtime Analysis Report</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0f172a', /* slate-900 */
+                        cardbg: '#1e293b', /* slate-800 */
+                        bordercolor: '#334155' /* slate-700 */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b1120; color: #f8fafc; }
+        .card { background-color: #1e293b; border: 1px solid #334155; border-radius: 0.75rem; }
+        
+        /* Custom scrollbar to match dark theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        /* ApexCharts Dark Theme Overrides to match Tailwind slate colors */
+        .apexcharts-tooltip {
+            background: #1e293b !important;
+            border: 1px solid #334155 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+            color: #f8fafc !important;
+        }
+        .apexcharts-tooltip-title {
+            background: #0f172a !important;
+            border-bottom: 1px solid #334155 !important;
+            font-family: 'Inter', sans-serif !important;
+        }
+        .apexcharts-text tspan { fill: #94a3b8; }
+        .apexcharts-legend-text { color: #cbd5e1 !important; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden text-sm">
+
+    <!-- Sidebar (Mocked for context) -->
+    <aside class="w-64 border-r border-slate-800 bg-[#0f172a] flex flex-col hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div class="w-8 h-8 bg-slate-700 rounded-md flex items-center justify-center">🏭</div>
+            <span class="font-bold text-lg tracking-wide text-white">Factory OEE</span>
+        </div>
+        <nav class="flex-1 px-4 space-y-1 mt-4">
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Downtime
+            </a>
+            <!-- Active State -->
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-white bg-indigo-600/10 rounded-lg border-l-2 border-indigo-500">
+                <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                Reports
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-2.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                Alerts
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-8 h-8 rounded-full bg-slate-600"></div>
+                <div>
+                    <div class="text-sm font-medium text-white">Somchai P.</div>
+                    <div class="text-xs text-slate-500">Operator</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        
+        <!-- Top Header -->
+        <header class="flex flex-col sm:flex-row sm:items-center justify-between px-8 py-6 border-b border-slate-800/50 gap-4">
+            <div>
+                <h1 class="text-2xl font-semibold text-white">Downtime Analysis</h1>
+                <div class="text-sm text-slate-400 mt-1">รายงานและวิเคราะห์ (Reports / Analytics)</div>
+            </div>
+            <div class="flex items-center gap-4">
+                <!-- Fake Date Range Picker -->
+                <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 rounded-lg px-4 py-2 text-slate-300 hover:border-slate-600 cursor-pointer transition">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <span>13/05/2024 - 20/05/2024</span>
+                    <svg class="w-4 h-4 text-slate-400 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <button class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 transition rounded-lg px-4 py-2 text-white shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Export
+                </button>
+            </div>
+        </header>
+
+        <!-- Content Body -->
+        <div class="px-8 py-6 space-y-6">
+            
+            <!-- Navigation Tabs -->
+            <div class="flex items-center gap-8 border-b border-slate-800 overflow-x-auto pb-1">
+                <a href="#" class="px-2 py-3 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">ภาพรวม</a>
+                <a href="#" class="px-2 py-3 text-white font-medium border-b-2 border-indigo-500 whitespace-nowrap">Pareto Chart</a>
+                <a href="#" class="px-2 py-3 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Trend</a>
+                <a href="#" class="px-2 py-3 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Machine Comparison</a>
+                <a href="#" class="px-2 py-3 text-slate-400 hover:text-slate-200 transition whitespace-nowrap">Shift Analysis</a>
+            </div>
+
+            <!-- Middle Grid: Chart & Top 5 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Pareto Chart Card (Takes 2 columns) -->
+                <div class="card lg:col-span-2 p-6 flex flex-col shadow-lg shadow-black/10">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="flex items-baseline gap-2">
+                            <h2 class="font-semibold text-white text-base">Pareto Chart</h2>
+                            <span class="text-slate-400 text-sm">(ตามสาเหตุ)</span>
+                        </div>
+                    </div>
+                    <!-- Chart Container -->
+                    <div class="flex-1 min-h-[320px] relative w-full">
+                        <div id="paretoChart" class="absolute inset-0"></div>
+                    </div>
+                </div>
+
+                <!-- Top 5 List Card (Takes 1 column) -->
+                <div class="card p-6 flex flex-col shadow-lg shadow-black/10">
+                    <h2 class="font-semibold text-white text-base mb-5">Top 5 Downtime</h2>
+                    <!-- Dynamic List Container -->
+                    <div class="flex-1 space-y-4" id="top5List">
+                        <!-- Items injected by JS -->
+                    </div>
+                    
+                    <!-- Total Summary at bottom of list -->
+                    <div class="mt-6 pt-5 border-t border-slate-700 flex justify-between items-center text-white">
+                        <span class="text-slate-400 font-medium">Total Downtime</span>
+                        <span class="font-semibold text-lg" id="totalDowntimeList">0 ชม.</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Grid: KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <!-- Card 1: Total Downtime -->
+                <div class="card p-6 relative overflow-hidden group hover:border-slate-600 transition duration-300 shadow-md">
+                    <!-- Subtle hover glow effect -->
+                    <div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    
+                    <div class="text-slate-400 font-medium mb-2 relative z-10">Total Downtime</div>
+                    <div class="text-3xl font-bold text-white tracking-tight relative z-10" id="kpiTotal">0 ชม.</div>
+                    
+                    <!-- Compare indicator -->
+                    <div class="mt-4 flex items-center gap-1.5 text-xs font-medium relative z-10">
+                        <span class="text-red-500 flex items-center bg-red-500/10 px-1.5 py-0.5 rounded">
+                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                            +12%
+                        </span>
+                        <span class="text-slate-500 font-normal">จากช่วงก่อนหน้า</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Average -->
+                <div class="card p-6 relative overflow-hidden group hover:border-slate-600 transition duration-300 shadow-md">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="text-slate-400 font-medium mb-2 relative z-10">Average Downtime/ครั้ง</div>
+                    <div class="text-3xl font-bold text-white tracking-tight relative z-10">18.5 <span class="text-lg font-medium text-slate-400">นาที</span></div>
+                    <div class="mt-4 flex items-center gap-1.5 text-xs font-medium relative z-10">
+                        <span class="text-green-500 flex items-center bg-green-500/10 px-1.5 py-0.5 rounded">
+                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                            -8%
+                        </span>
+                        <span class="text-slate-500 font-normal">จากช่วงก่อนหน้า</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: MTTR -->
+                <div class="card p-6 relative overflow-hidden group hover:border-slate-600 transition duration-300 shadow-md">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="text-slate-400 font-medium mb-2 relative z-10 flex items-center gap-1">MTTR <span class="text-xs font-normal text-slate-500">(เฉลี่ย)</span></div>
+                    <div class="text-3xl font-bold text-white tracking-tight relative z-10">24.3 <span class="text-lg font-medium text-slate-400">นาที</span></div>
+                    <div class="mt-4 flex items-center gap-1.5 text-xs font-medium relative z-10">
+                        <span class="text-green-500 flex items-center bg-green-500/10 px-1.5 py-0.5 rounded">
+                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+                            -5%
+                        </span>
+                        <span class="text-slate-500 font-normal">จากช่วงก่อนหน้า</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: MTBF -->
+                <div class="card p-6 relative overflow-hidden group hover:border-slate-600 transition duration-300 shadow-md">
+                    <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="text-slate-400 font-medium mb-2 relative z-10">MTBF</div>
+                    <div class="text-3xl font-bold text-white tracking-tight relative z-10">4.2 <span class="text-lg font-medium text-slate-400">ชม.</span></div>
+                    <div class="mt-4 flex items-center gap-1.5 text-xs font-medium relative z-10">
+                        <span class="text-green-500 flex items-center bg-green-500/10 px-1.5 py-0.5 rounded">
+                            <svg class="w-3 h-3 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>
+                            +115%
+                        </span>
+                        <span class="text-slate-500 font-normal">จากช่วงก่อนหน้า</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Vanilla JavaScript Data Logic & Chart Render -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // ==========================================
+            // 1. DATA PREPARATION (Mock Data Logic)
+            // ==========================================
+            // We input raw hours based on the design mockup (e.g. 12:30 hours = 12.5)
+            const rawData = [
+                { reason: 'Changeover / Setup', hours: 5.00 },
+                { reason: 'Breakdown', hours: 12.50 },
+                { reason: 'Quality Issue', hours: 2.16 },    // 2 hrs 10 mins
+                { reason: 'Others', hours: 1.66 },          // 1 hr 40 mins
+                { reason: 'Material Shortage', hours: 7.33 } // 7 hrs 20 mins
+            ];
+
+            // Step 1: Sort Descending by hours (The Pareto Rule)
+            const sortedData = [...rawData].sort((a, b) => b.hours - a.hours);
+
+            // Step 2: Calculate total hours
+            const totalHours = sortedData.reduce((sum, item) => sum + item.hours, 0);
+
+            // Step 3: Calculate Cumulative Percentage
+            let cumulativeSum = 0;
+            const chartData = sortedData.map(item => {
+                cumulativeSum += item.hours;
+                const percentage = (item.hours / totalHours) * 100;
+                const cumulativePercentage = (cumulativeSum / totalHours) * 100;
+                
+                return {
+                    reason: item.reason,
+                    hours: Number(item.hours.toFixed(2)),
+                    percentage: Number(percentage.toFixed(0)), // Round to whole number for display
+                    cumulativePercentage: Number(cumulativePercentage.toFixed(1))
+                };
+            });
+
+
+            // ==========================================
+            // 2. HELPER FUNCTIONS
+            // ==========================================
+            // Converts decimal hours (12.5) back to string "12:30"
+            function formatHours(decimalHours) {
+                const hours = Math.floor(decimalHours);
+                const mins = Math.round((decimalHours - hours) * 60);
+                return `${hours}:${mins.toString().padStart(2, '0')}`;
+            }
+
+            // Update Total Strings on UI
+            const formattedTotalStr = formatHours(totalHours) + ' ชม.';
+            document.getElementById('totalDowntimeList').innerText = formattedTotalStr;
+            document.getElementById('kpiTotal').innerText = formattedTotalStr;
+
+
+            // ==========================================
+            // 3. RENDER TOP 5 LIST
+            // ==========================================
+            const listContainer = document.getElementById('top5List');
+            let listHTML = '';
+            
+            chartData.forEach((item, index) => {
+                listHTML += `
+                    <div class="flex justify-between items-center group cursor-default">
+                        <div class="flex gap-3 items-center">
+                            <span class="text-slate-500 font-medium w-4">${index + 1}.</span>
+                            <span class="text-slate-300 group-hover:text-white transition-colors">${item.reason}</span>
+                        </div>
+                        <div class="flex gap-3 items-center">
+                            <span class="text-white font-medium w-16 text-right">${formatHours(item.hours)} ชม.</span>
+                            <span class="text-slate-500 text-xs w-10 text-right">(${item.percentage}%)</span>
+                        </div>
+                    </div>
+                `;
+            });
+            listContainer.innerHTML = listHTML;
+
+
+            // ==========================================
+            // 4. RENDER PARETO CHART (ApexCharts)
+            // ==========================================
+            // Prepare arrays for Chart series
+            // If label has "/", split it into an array so it wraps to a new line on X-axis
+            const categories = chartData.map(item => {
+                if(item.reason.includes(' / ')) return item.reason.split(' / ');
+                return item.reason;
+            });
+            const barSeriesData = chartData.map(item => item.hours);
+            const lineSeriesData = chartData.map(item => item.cumulativePercentage);
+
+            const options = {
+                series: [
+                    {
+                        name: 'Downtime (ชม.)',
+                        type: 'column',
+                        data: barSeriesData
+                    }, 
+                    {
+                        name: 'Cumulative (%)',
+                        type: 'line',
+                        data: lineSeriesData
+                    }
+                ],
+                chart: {
+                    height: '100%',
+                    type: 'line',
+                    toolbar: { show: false }, // Hide download hamburger menu
+                    fontFamily: 'Inter, sans-serif',
+                    parentHeightOffset: 0
+                },
+                colors: ['#3b82f6', '#f97316'], // Tailwind: blue-500 for bar, orange-500 for line
+                stroke: {
+                    width: [0, 3], // 0 width for bar border, 3px width for line
+                    curve: 'straight'
+                },
+                markers: {
+                    size: [0, 5], // No markers for bar, 5px dots for line
+                    colors: ['#f97316'],
+                    strokeColors: '#1e293b', // Match card background to create cutout effect
+                    strokeWidth: 2,
+                    hover: { size: 7 }
+                },
+                dataLabels: {
+                    enabled: false // Hide numbers on top of bars
+                },
+                plotOptions: {
+                    bar: {
+                        columnWidth: '45%',
+                        borderRadius: 3
+                    }
+                },
+                xaxis: {
+                    categories: categories,
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    labels: {
+                        style: { 
+                            colors: '#94a3b8', // slate-400
+                            fontSize: '11px',
+                            fontWeight: 500
+                        },
+                        offsetY: 5
+                    }
+                },
+                yaxis: [
+                    // Left Y-Axis (Hours)
+                    {
+                        title: {
+                            text: '(ชม.)',
+                            style: { color: '#94a3b8', fontWeight: 400, fontSize: '11px' },
+                            offsetX: 10,
+                            offsetY: -140, // Position text at the top
+                            rotate: 0
+                        },
+                        labels: { 
+                            style: { colors: '#94a3b8' },
+                            formatter: (val) => val.toFixed(0)
+                        },
+                        min: 0,
+                        max: 30, // Hardcoded max to match mockup proportions (Breakdown is 12.5, looks like ~half)
+                        tickAmount: 6
+                    }, 
+                    // Right Y-Axis (Cumulative Percentage)
+                    {
+                        opposite: true,
+                        title: { text: '' }, // No title needed on right
+                        labels: { 
+                            formatter: function (val) { return val.toFixed(0) + "%" },
+                            style: { colors: '#94a3b8' }
+                        },
+                        min: 0,
+                        max: 100,
+                        tickAmount: 5
+                    }
+                ],
+                grid: {
+                    borderColor: '#334155', // slate-700
+                    strokeDashArray: 3, // Dotted grid lines
+                    xaxis: { lines: { show: false } },
+                    yaxis: { lines: { show: true } },
+                    padding: { top: 0, right: 0, bottom: 0, left: 10 }
+                },
+                legend: {
+                    position: 'bottom',
+                    markers: { radius: 12 }, // Round legend markers
+                    itemMargin: { horizontal: 15, vertical: 10 },
+                    offsetY: 10
+                },
+                theme: { mode: 'dark' } // Essential for tooltip text visibility
+            };
+
+            const chart = new ApexCharts(document.querySelector("#paretoChart"), options);
+            chart.render();
+        });
+    </script>
+</body>
+</html>

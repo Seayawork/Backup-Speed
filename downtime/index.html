@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Downtime Queue</title>
+    <style>
+        body { font-family: 'Kanit', sans-serif; background-color: #1a1c23; color: white; padding: 50px; text-align: center; }
+        .container { max-width: 800px; margin: 0 auto; background: #252836; padding: 40px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h1 { color: #f97316; }
+        p { color: #9ca3af; font-size: 1.2rem; margin-bottom: 30px; }
+        .btn { display: inline-block; padding: 12px 24px; background: #8b5cf6; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn:hover { background: #7c3aed; }
+        .table-mockup { margin-top: 40px; width: 100%; border-collapse: collapse; text-align: left; }
+        .table-mockup th { padding: 12px; border-bottom: 2px solid #374151; color: #d1d5db; }
+        .table-mockup td { padding: 12px; border-bottom: 1px solid #374151; }
+        .badge { background: #f59e0b20; color: #fbbf24; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; border: 1px solid #fbbf2440; }
+        .badge.filled { background: #10b98120; color: #34d399; border-color: #10b98140; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 Downtime Queue</h1>
+        <p>หน้านี้กำลังอยู่ระหว่างการสร้าง... (Under Construction)</p>
+        
+        <table class="table-mockup">
+            <thead>
+                <tr>
+                    <th>Machine</th>
+                    <th>Time</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>11bc02</td>
+                    <td>10:30 - 10:35</td>
+                    <td>5 min</td>
+                    <td><span class="badge">Pending Reason</span></td>
+                    <td><a href="#" style="color:#60a5fa;">+ Add</a></td>
+                </tr>
+                <tr>
+                    <td>11bc05</td>
+                    <td>09:00 - 09:12</td>
+                    <td>12 min</td>
+                    <td><span class="badge filled">Filled</span></td>
+                    <td><span style="color:#9ca3af;">Machine Fault</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br><br>
+        <a href="/" class="btn">← Back to Dashboard</a>
+    </div>
+</body>
+</html>
